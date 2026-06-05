@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import api from './utils/api';
+import { exportAllData } from './utils/exportData';
 import Login from './pages/Login';
 import Vehicles from './pages/Vehicles';
 import Appointments from './pages/Appointments';
@@ -18,6 +19,7 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
   const lastCountRef = useRef(0);
   const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3')); // Sonido de notificación
 
@@ -82,6 +84,18 @@ function AppContent() {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     setIsSidebarOpen(false); // Cerrar sidebar al cambiar de página en móvil
+  };
+
+  const handleExportAll = async () => {
+    try {
+      setIsExporting(true);
+      await exportAllData();
+      alert('¡Exportación completada con éxito! 📊');
+    } catch (error) {
+      alert('Error al exportar datos: ' + (error.message || 'Ocurrió un error'));
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const renderPage = () => {
@@ -280,7 +294,7 @@ function AppContent() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto w-full">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between md:justify-end px-4 md:px-8 sticky top-0 z-30">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
           {/* Botón menú móvil */}
           <button 
             onClick={() => setIsSidebarOpen(true)}
@@ -289,7 +303,20 @@ function AppContent() {
             ☰
           </button>
 
-          <div className="flex items-center space-x-4 md:space-x-6">
+          <div className="flex items-center space-x-3 md:space-x-6">
+            {/* Botón de exportación para todos */}
+            <button 
+              onClick={handleExportAll}
+              disabled={isExporting}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg font-bold text-sm transition-all ${
+                isExporting 
+                ? 'bg-slate-200 text-slate-500 cursor-wait' 
+                : 'bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-600/20'
+              }`}
+            >
+              {isExporting ? '⏳ Exportando...' : '📊 Exportar Datos'}
+            </button>
+            
             <button 
               onClick={() => handlePageChange('notifications')}
               className="relative p-2 text-gray-500 hover:text-blue-600 transition-all duration-300"
