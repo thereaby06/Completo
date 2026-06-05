@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import api from './utils/api';
 import Login from './pages/Login';
+import Vehicles from './pages/Vehicles';
+import Appointments from './pages/Appointments';
 import Inventory from './pages/Inventory';
 import Notifications from './pages/Notifications';
 import Chat from './pages/Chat';
@@ -86,10 +88,10 @@ function AppContent() {
     // Protección de rutas por rol
     const isAllowed = (page) => {
       const permissions = {
-        'admin': ['dashboard', 'inventory', 'staff', 'tasks', 'chat', 'notifications', 'mechanic-panel', 'profile'],
-        'recepcionist': ['dashboard', 'inventory', 'chat', 'notifications', 'profile'],
-        'mechanic': ['dashboard', 'mechanic-panel', 'chat', 'notifications', 'profile'],
-        'client': ['dashboard', 'notifications', 'profile']
+        'admin': ['dashboard', 'vehicles', 'appointments', 'inventory', 'staff', 'tasks', 'chat', 'notifications', 'mechanic-panel', 'profile'],
+        'recepcionist': ['dashboard', 'vehicles', 'appointments', 'chat', 'notifications', 'profile'],
+        'mechanic': ['dashboard', 'vehicles', 'mechanic-panel', 'chat', 'notifications', 'profile'],
+        'client': ['dashboard', 'vehicles', 'notifications', 'profile']
       };
       const role = user.role.toLowerCase();
       return permissions[role]?.includes(page) || permissions['admin'].includes(page);
@@ -101,6 +103,8 @@ function AppContent() {
     }
 
     switch(currentPage) {
+      case 'vehicles': return <Vehicles />;
+      case 'appointments': return <Appointments />;
       case 'inventory': return <Inventory />;
       case 'notifications': return <Notifications />;
       case 'chat': return <Chat />;
@@ -118,15 +122,16 @@ function AppContent() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
             {user.role === 'ADMIN' && (
               <>
+                <MetricCard label="Vehículos" value="12" color="blue" />
+                <MetricCard label="Citas Hoy" value="5" color="orange" />
                 <MetricCard label="Repuestos" value="142" color="purple" />
-                <MetricCard label="Tareas" value="4" color="blue" />
-                <MetricCard label="Personal" value="5" color="orange" />
-                <MetricCard label="Mensajes" value="8" color="green" />
+                <MetricCard label="Ingresos" value="$4,250" color="green" />
               </>
             )}
             {user.role === 'RECEPCIONIST' && (
               <>
-                <MetricCard label="Repuestos" value="142" color="purple" />
+                <MetricCard label="Citas Hoy" value="5" color="orange" />
+                <MetricCard label="En Taller" value="12" color="blue" />
                 <MetricCard label="Mensajes" value="8" color="green" />
               </>
             )}
@@ -148,7 +153,10 @@ function AppContent() {
               </h2>
               <div className="grid grid-cols-2 gap-3 md:gap-4">
                 {(user.role === 'ADMIN' || user.role === 'RECEPCIONIST') && (
-                  <QuickAction icon="📦" label="Inventario" onClick={() => handlePageChange('inventory')} />
+                  <>
+                    <QuickAction icon="�" label="Cita" onClick={() => handlePageChange('appointments')} />
+                    <QuickAction icon="🚗" label="Moto" onClick={() => handlePageChange('vehicles')} />
+                  </>
                 )}
                 {(user.role === 'ADMIN' || user.role === 'MECHANIC') && (
                   <QuickAction icon="🛠️" label="Tareas" onClick={() => handlePageChange('mechanic-panel')} />
@@ -165,11 +173,17 @@ function AppContent() {
             <div className="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100">
               <h2 className="text-lg font-bold mb-4 flex items-center">
                 <span className="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
-                Estado del Taller
+                {user.role === 'CLIENT' ? 'Estado de mis Motos' : 'Estado del Taller'}
               </h2>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Bienvenido, {user.name}. El sistema está operando correctamente en modo móvil y escritorio.
+                {user.role === 'CLIENT' ? `Hola ${user.name}, aquí puedes consultar el progreso real de tus motocicletas.` : `Bienvenido, ${user.name}. El sistema está operando correctamente en modo móvil y escritorio.`}
               </p>
+              <button 
+                onClick={() => user.role === 'CLIENT' ? handlePageChange('vehicles') : window.open('/tracking', '_blank')}
+                className="mt-4 text-xs font-bold text-blue-600 hover:underline uppercase tracking-widest"
+              >
+                {user.role === 'CLIENT' ? 'Consultar Mis Motos →' : 'Ver portal de seguimiento →'}
+              </button>
             </div>
           </div>
         </div>
@@ -183,7 +197,14 @@ function AppContent() {
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
         <SidebarLink active={currentPage === 'dashboard'} onClick={() => handlePageChange('dashboard')} icon="🏠" label="Dashboard" />
         
-        {(role === 'ADMIN' || role === 'RECEPCIONIST') && (
+        {(role === 'ADMIN' || role === 'RECEPCIONIST' || role === 'MECHANIC') && (
+          <>
+            <SidebarLink active={currentPage === 'vehicles'} onClick={() => handlePageChange('vehicles')} icon="🚗" label="Vehículos" />
+            <SidebarLink active={currentPage === 'appointments'} onClick={() => handlePageChange('appointments')} icon="📅" label="Citas" />
+          </>
+        )}
+
+        {(role === 'ADMIN') && (
           <SidebarLink active={currentPage === 'inventory'} onClick={() => handlePageChange('inventory')} icon="📦" label="Inventario" />
         )}
 
