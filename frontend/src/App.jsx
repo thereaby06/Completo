@@ -90,7 +90,7 @@ function AppContent() {
       const permissions = {
         'admin': ['dashboard', 'vehicles', 'appointments', 'inventory', 'staff', 'tasks', 'chat', 'notifications', 'mechanic-panel', 'profile'],
         'recepcionist': ['dashboard', 'vehicles', 'appointments', 'chat', 'notifications', 'profile'],
-        'mechanic': ['dashboard', 'vehicles', 'mechanic-panel', 'chat', 'notifications', 'profile'],
+        'mechanic': ['dashboard', 'mechanic-panel', 'chat', 'notifications', 'profile'],
         'client': ['dashboard', 'vehicles', 'notifications', 'profile']
       };
       const role = user.role.toLowerCase();
@@ -197,7 +197,7 @@ function AppContent() {
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
         <SidebarLink active={currentPage === 'dashboard'} onClick={() => handlePageChange('dashboard')} icon="🏠" label="Dashboard" />
         
-        {(role === 'ADMIN' || role === 'RECEPCIONIST' || role === 'MECHANIC') && (
+        {(role === 'ADMIN' || role === 'RECEPCIONIST') && (
           <>
             <SidebarLink active={currentPage === 'vehicles'} onClick={() => handlePageChange('vehicles')} icon="🚗" label="Vehículos" />
             <SidebarLink active={currentPage === 'appointments'} onClick={() => handlePageChange('appointments')} icon="📅" label="Citas" />
