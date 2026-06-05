@@ -20,8 +20,63 @@ function AppContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
+  const [dashboardData, setDashboardData] = useState({
+    vehiclesCount: 0,
+    appointmentsCount: 0,
+    inventoryCount: 0,
+    invoicesCount: 0,
+    tasksCount: 0,
+    assignedTasksCount: 0,
+    completedTasksCount: 0,
+    notificationsCount: 0
+  });
   const lastCountRef = useRef(0);
   const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3')); // Sonido de notificación
+
+  // Cargar datos del dashboard
+  const fetchDashboardData = async () => {
+    if (!user) return;
+    try {
+      // Obtener todos los datos necesarios en paralelo
+      const [vehiclesRes, appointmentsRes, inventoryRes, invoicesRes, tasksRes, notificationsRes] = await Promise.all([
+        api.get('/vehicles'),
+        api.get('/appointments'),
+        api.get('/inventory'),
+        api.get('/invoices'),
+        api.get('/tasks'),
+        api.get('/notifications')
+      ]);
+
+      // Filtrar datos por usuario si es mecánico o cliente
+      let myTasksCount = 0;
+      let assignedTasksCount = 0;
+      let completedTasksCount = 0;
+      let myVehiclesCount = 0;
+      
+      if (user.role === 'MECHANIC') {
+        myTasksCount = tasksRes.data.filter(t => t.workerId === user.id).length;
+        assignedTasksCount = tasksRes.data.filter(t => t.workerId === user.id && t.status !== 'COMPLETED').length;
+        completedTasksCount = tasksRes.data.filter(t => t.workerId === user.id && t.status === 'COMPLETED').length;
+      }
+      
+      if (user.role === 'CLIENT') {
+        myVehiclesCount = vehiclesRes.data.filter(v => v.ownerId === user.id).length;
+      }
+
+      setDashboardData({
+        vehiclesCount: user.role === 'CLIENT' ? myVehiclesCount : vehiclesRes.data.length,
+        appointmentsCount: appointmentsRes.data.filter(a => a.status !== 'COMPLETED').length,
+        inventoryCount: inventoryRes.data.length,
+        invoicesCount: invoicesRes.data.length,
+        tasksCount: user.role === 'MECHANIC' ? myTasksCount : tasksRes.data.length,
+        assignedTasksCount: user.role === 'MECHANIC' ? assignedTasksCount : 0,
+        completedTasksCount: user.role === 'MECHANIC' ? completedTasksCount : 0,
+        notificationsCount: notificationsRes.data.filter(n => !n.read).length
+      });
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    }
+  };
 
   // Polling para notificaciones
   useEffect(() => {
@@ -51,6 +106,13 @@ function AppContent() {
     const interval = setInterval(checkNotifications, 5000); // Revisar cada 5 segundos para más rapidez
     return () => clearInterval(interval);
   }, [user]);
+
+  // Cargar datos del dashboard cuando el usuario inicie sesión o cambie de página
+  useEffect(() => {
+    if (user && currentPage === 'dashboard') {
+      fetchDashboardData();
+    }
+  }, [user, currentPage]);
 
   // Manejar el primer clic del usuario para habilitar el sonido (restricción del navegador)
   const enableAudioOnFirstClick = () => {
@@ -136,25 +198,31 @@ function AppContent() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
             {user.role === 'ADMIN' && (
               <>
-                <MetricCard label="Vehículos" value="12" color="blue" />
-                <MetricCard label="Citas Hoy" value="5" color="orange" />
-                <MetricCard label="Repuestos" value="142" color="purple" />
-                <MetricCard label="Ingresos" value="$4,250" color="green" />
+                <MetricCard label="Vehículos" value={dashboardData.vehiclesCount} color="blue" />
+                <MetricCard label="Citas Pendientes" value={dashboardData.appointmentsCount} color="orange" />
+                <MetricCard label="Repuestos" value={dashboardData.inventoryCount} color="purple" />
+                <MetricCard label="Facturas" value={dashboardData.invoicesCount} color="green" />
               </>
             )}
             {user.role === 'RECEPCIONIST' && (
               <>
-                <MetricCard label="Citas Hoy" value="5" color="orange" />
-                <MetricCard label="En Taller" value="12" color="blue" />
-                <MetricCard label="Mensajes" value="8" color="green" />
+                <MetricCard label="Citas Pendientes" value={dashboardData.appointmentsCount} color="orange" />
+                <MetricCard label="Vehículos" value={dashboardData.vehiclesCount} color="blue" />
+                <MetricCard label="Notificaciones" value={dashboardData.notificationsCount} color="green" />
               </>
             )}
             {user.role === 'MECHANIC' && (
               <>
-                <MetricCard label="Mis Tareas" value="4" color="blue" />
-                <MetricCard label="Asignados" value="3" color="orange" />
-                <MetricCard label="Listos" value="28" color="green" />
-                <MetricCard label="Alertas" value="2" color="red" />
+                <MetricCard label="Mis Tareas" value={dashboardData.tasksCount} color="blue" />
+                <MetricCard label="Asignados" value={dashboardData.assignedTasksCount} color="orange" />
+                <MetricCard label="Listos" value={dashboardData.completedTasksCount} color="green" />
+                <MetricCard label="Alertas" value={dashboardData.notificationsCount} color="red" />
+              </>
+            )}
+            {user.role === 'CLIENT' && (
+              <>
+                <MetricCard label="Mis Vehículos" value={dashboardData.vehiclesCount} color="blue" />
+                <MetricCard label="Notificaciones" value={dashboardData.notificationsCount} color="orange" />
               </>
             )}
           </div>
