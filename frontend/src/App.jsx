@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import api from './utils/api';
 import Login from './pages/Login';
-import Vehicles from './pages/Vehicles';
-import Appointments from './pages/Appointments';
 import Inventory from './pages/Inventory';
-import Invoices from './pages/Invoices';
 import Notifications from './pages/Notifications';
 import Chat from './pages/Chat';
 import Staff from './pages/Staff';
