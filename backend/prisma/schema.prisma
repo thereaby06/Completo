@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("MECHANIC") // ADMIN, MECHANIC, RECEPCIONIST, CLIENT
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  vehicles  Vehicle[]
+  invoices  Invoice[]
+  messages      Message[] @relation("SentMessages")
+  receivedMsgs  Message[] @relation("ReceivedMessages")
+  assignedTasks Task[] @relation("AssignedWorker")
+  createdTasks  Task[] @relation("Creator")
+  mechanicOrders Appointment[] @relation("MechanicOrders")
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  priority    String   @default("MEDIUM")  // LOW, MEDIUM, HIGH
+  workerId    Int
+  worker      User     @relation("AssignedWorker", fields: [workerId], references: [id])
+  creatorId   Int
+  creator     User     @relation("Creator", fields: [creatorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Vehicle {
+  id           Int           @id @default(autoincrement())
+  plate        String        @unique
+  brand        String
+  model        String
+  year         Int
+  owner        User          @relation(fields: [ownerId], references: [id])
+  ownerId      Int
+  appointments Appointment[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Appointment {
+  id              Int      @id @default(autoincrement())
+  date            DateTime
+  description     String   // Motivo de la revisión (ej: revisión 500km)
+  physicalStatus  String?  // Estado físico (ej: rayones en el tanque)
+  novelties       String?  // Novedades (ej: sonido en el motor)
+  observations    String?  // Lo que el mecánico le hizo (nuevo)
+  evidence        String?  // Evidencia de trabajo (URL o texto) (nuevo)
+  status          String   @default("PENDING") // PENDING, IN_PROGRESS, PAUSED_PARTS, PAUSED_QUICK, COMPLETED, CANCELLED
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId       Int
+  mechanicId      Int?     // Mecánico que tomó la orden
+  mechanic        User?    @relation("MechanicOrders", fields: [mechanicId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model InventoryItem {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  quantity    Int      @default(0)
+  price       Float
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Invoice {
+  id        Int      @id @default(autoincrement())
+  number    String   @unique
+  total     Float
+  status    String   @default("UNPAID") // PAID, UNPAID, CANCELLED
+  client    User     @relation(fields: [clientId], references: [id])
+  clientId  Int
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id          Int      @id @default(autoincrement())
+  content     String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId    Int
+  receiverId  Int?     // Opcional para mensajes privados
+  receiver    User?    @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  chatRoom    String   @default("general") // general o private
+  createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  type      String   @default("INFO") // INFO, WARNING, SUCCESS, ERROR
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+}
