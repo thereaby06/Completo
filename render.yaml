@@ -11,7 +11,11 @@ services:
       - key: NODE_VERSION
         value: 18.0.0
       - key: DATABASE_URL
-        value: "file:./prisma/dev.db" # Usar una BD externa como Supabase/PostgreSQL en producción real
+        fromDatabase:
+          name: completo-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true # Genera un secret seguro automáticamente
       - key: PORT
         value: 10000
 
