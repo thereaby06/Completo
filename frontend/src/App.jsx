@@ -165,7 +165,7 @@ function AppContent() {
     const isAllowed = (page) => {
       const permissions = {
         'admin': ['dashboard', 'vehicles', 'appointments', 'inventory', 'staff', 'tasks', 'chat', 'notifications', 'mechanic-panel', 'profile'],
-        'recepcionist': ['dashboard', 'vehicles', 'appointments', 'chat', 'notifications', 'profile'],
+        'recepcionist': ['dashboard', 'vehicles', 'appointments', 'staff', 'chat', 'notifications', 'profile'],
         'mechanic': ['dashboard', 'mechanic-panel', 'chat', 'notifications', 'profile'],
         'client': ['dashboard', 'vehicles', 'notifications', 'profile']
       };
@@ -304,7 +304,7 @@ function AppContent() {
           <SidebarLink active={currentPage === 'chat'} onClick={() => handlePageChange('chat')} icon="💬" label="Chat Interno" />
         )}
         
-        {role === 'ADMIN' && (
+        {(role === 'ADMIN' || role === 'RECEPCIONIST') && (
           <>
             <div className="pt-4 pb-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-4">Administración</div>
             <SidebarLink active={currentPage === 'staff'} onClick={() => handlePageChange('staff')} icon="👥" label="Personal / Clientes" />

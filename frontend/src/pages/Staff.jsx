@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import api from '../utils/api';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { AuthContext } from '../context/AuthContext';
 
 function Staff() {
+  const { user } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [newUser, setNewUser] = useState({ email: '', password: '', name: '', role: 'MECHANIC' });
+  const [newUser, setNewUser] = useState({ email: '', password: '', name: '', role: 'CLIENT' });
   const [isResetting, setIsResetting] = useState(false);
   const [hasExported, setHasExported] = useState(false);
 
@@ -103,9 +105,14 @@ function Staff() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/users', newUser);
+      // Si es recepcionista, forzar que el rol sea CLIENTE
+      const userToCreate = user?.role === 'ADMIN' 
+        ? newUser 
+        : { ...newUser, role: 'CLIENT' };
+      
+      await api.post('/users', userToCreate);
       setShowModal(false);
-      setNewUser({ email: '', password: '', name: '', role: 'MECHANIC' });
+      setNewUser({ email: '', password: '', name: '', role: 'CLIENT' });
       fetchUsers();
     } catch (error) {
       alert('Error al crear usuario');
@@ -127,17 +134,19 @@ function Staff() {
           >
             📊 Exportar Excel
           </button>
-          <button 
-            onClick={handleResetSystem}
-            disabled={isResetting || !hasExported}
-            className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
-              !hasExported 
-              ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
-              : 'bg-red-600 text-white hover:bg-red-700 shadow-red-600/20'
-            }`}
-          >
-            {isResetting ? 'Reseteando...' : '⚠️ Resetear Todo'}
-          </button>
+          {user?.role === 'ADMIN' && (
+            <button 
+              onClick={handleResetSystem}
+              disabled={isResetting || !hasExported}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
+                !hasExported 
+                ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
+                : 'bg-red-600 text-white hover:bg-red-700 shadow-red-600/20'
+              }`}
+            >
+              {isResetting ? 'Reseteando...' : '⚠️ Resetear Todo'}
+            </button>
+          )}
           <button 
             onClick={() => setShowModal(true)}
             className="flex-1 md:flex-none bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all"
@@ -207,16 +216,22 @@ function Staff() {
                 value={newUser.password}
                 onChange={e => setNewUser({...newUser, password: e.target.value})}
               />
-              <select 
-                className="w-full border rounded p-2"
-                value={newUser.role}
-                onChange={e => setNewUser({...newUser, role: e.target.value})}
-              >
-                <option value="MECHANIC">Mecánico</option>
-                <option value="RECEPCIONIST">Recepcionista</option>
-                <option value="CLIENT">Cliente</option>
-                <option value="ADMIN">Administrador/Dueño</option>
-              </select>
+              {user?.role === 'ADMIN' ? (
+                <select 
+                  className="w-full border rounded p-2"
+                  value={newUser.role}
+                  onChange={e => setNewUser({...newUser, role: e.target.value})}
+                >
+                  <option value="MECHANIC">Mecánico</option>
+                  <option value="RECEPCIONIST">Recepcionista</option>
+                  <option value="CLIENT">Cliente</option>
+                  <option value="ADMIN">Administrador/Dueño</option>
+                </select>
+              ) : (
+                <div className="w-full border rounded p-2 bg-gray-50">
+                  <span className="font-bold">Rol:</span> Cliente
+                </div>
+              )}
               <div className="flex justify-end space-x-2 pt-4">
                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-500">Cancelar</button>
                 <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Crear Usuario</button>
