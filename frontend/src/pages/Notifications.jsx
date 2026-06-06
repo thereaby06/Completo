@@ -4,6 +4,7 @@ import api from '../utils/api';
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
 
   useEffect(() => {
     fetchNotifications();
@@ -29,9 +30,35 @@ function Notifications() {
     }
   };
 
+  const clearAll = async () => {
+    const confirm = window.confirm("¿Estás seguro de eliminar todas las notificaciones?");
+    if (!confirm) return;
+
+    try {
+      setIsClearing(true);
+      await api.delete('/notifications');
+      fetchNotifications();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">Centro de Notificaciones</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Centro de Notificaciones</h1>
+        {notifications.length > 0 && (
+          <button 
+            onClick={clearAll}
+            disabled={isClearing}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 transition-all disabled:opacity-50"
+          >
+            {isClearing ? 'Eliminando...' : '🗑️ Vaciar Todo'}
+          </button>
+        )}
+      </div>
       
       {loading ? (
         <p>Cargando...</p>

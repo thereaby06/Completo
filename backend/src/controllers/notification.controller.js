@@ -36,4 +36,13 @@ const createNotification = async (req, res) => {
   }
 };
 
-module.exports = { getAllNotifications, markAsRead, createNotification };
+const clearAllNotifications = async (req, res) => {
+  try {
+    await prisma.notification.deleteMany();
+    res.json({ message: 'Todas las notificaciones han sido eliminadas' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { getAllNotifications, markAsRead, createNotification, clearAllNotifications };
