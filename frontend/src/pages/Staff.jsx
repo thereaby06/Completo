@@ -115,7 +115,8 @@ function Staff() {
       setNewUser({ email: '', password: '', name: '', role: 'CLIENT' });
       fetchUsers();
     } catch (error) {
-      alert('Error al crear usuario');
+      const message = error?.response?.data?.message || error?.response?.data?.error || error.message;
+      alert('Error al crear usuario: ' + message);
     }
   };
 

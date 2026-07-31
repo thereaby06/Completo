@@ -6,11 +6,15 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Configuración de CORS para producción
-const corsOptions = {
-  origin: process.env.FRONTEND_URL || '*',
-  optionsSuccessStatus: 200
-};
+const frontendUrl = process.env.FRONTEND_URL;
+const corsOrigin = frontendUrl
+  ? frontendUrl
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean)
+  : ['*'];
+
+const corsOptions = { origin: corsOrigin.length === 1 ? corsOrigin[0] : corsOrigin, optionsSuccessStatus: 200 };
 
 // Routes
 const authRoutes = require('./routes/auth.routes');

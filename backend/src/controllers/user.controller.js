@@ -1,11 +1,18 @@
 const prisma = require('../utils/prisma');
+const bcrypt = require('bcrypt');
 
 const getAllUsers = async (req, res) => {
   try {
     const { role } = req.query;
     const users = await prisma.user.findMany({
       where: role ? { role } : {},
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
         vehicles: true,
         assignedTasks: true
       }
@@ -19,8 +26,21 @@ const getAllUsers = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
+
+    if (!email || !password || !name) {
+      return res.status(400).json({ message: 'Faltan campos requeridos: email, password, name' });
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'El email ya está registrado' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const user = await prisma.user.create({
-      data: { email, password, name, role }
+      data: { email, password: hashedPassword, name, role },
+      select: { id: true, email: true, name: true, role: true, createdAt: true }
     });
     res.status(201).json(user);
   } catch (error) {
@@ -55,13 +75,20 @@ const updateProfile = async (req, res) => {
   try {
     const { id } = req.params;
     const { email, password, name } = req.body;
-    
+
+    const updateData = {
+      email: email || undefined,
+      name: name || undefined
+    };
+
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
     const user = await prisma.user.update({
       where: { id: parseInt(id) },
       data: {
-        email: email || undefined,
-        password: password || undefined,
-        name: name || undefined
+        ...updateData
       }
     });
     

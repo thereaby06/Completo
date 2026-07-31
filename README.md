@@ -6,6 +6,20 @@ Proyecto reiniciado desde cero con una arquitectura limpia.
 - `/backend`: API construida con Node.js, Express y Prisma.
 - `/frontend`: Aplicación SPA construida con React, Vite y Tailwind CSS.
 
+## Desarrollo local
+1. Instalar dependencias:
+   - `npm install`
+   - `cd backend && npm install`
+   - `cd ../frontend && npm install`
+2. Variables de entorno:
+   - Backend: copiar `backend/.env.example` a `backend/.env`
+   - Frontend: copiar `frontend/.env.example` a `frontend/.env`
+3. Levantar en modo desarrollo desde la raíz:
+   - `npm run dev`
+4. Calidad:
+   - `npm run lint`
+   - `npm run format` / `npm run format:check`
+
 ## Despliegue en Render
 
 Este proyecto está configurado para desplegarse como un **Monorepo** en Render.com.
@@ -27,6 +41,8 @@ Para un entorno de producción real, se recomienda usar una base de datos admini
 **En el Backend:**
 - `DATABASE_URL`: URL de tu base de datos.
 - `FRONTEND_URL`: URL de tu sitio estático (ej. `https://completo.onrender.com`).
+- `RESET_DB`: `true` si quieres forzar recreación del esquema en cada build (modo demo).
+- `RUN_SEED`: `true` si quieres ejecutar `backend/prisma/seed.js` durante el build (modo demo).
 
 **En el Frontend:**
 - `VITE_API_URL`: URL de tu servicio de backend (ej. `https://workshop-backend.onrender.com`).
