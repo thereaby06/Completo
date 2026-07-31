@@ -1,7 +1,7 @@
 services:
   # Backend Service
   - type: web
-    name: workshop-backend
+    name: completo-backend
     runtime: node
     plan: free
     region: oregon
@@ -26,7 +26,7 @@ services:
 
   # Frontend Service
   - type: static
-    name: workshop-frontend
+    name: completo-frontend
     runtime: static
     buildCommand: cd frontend && npm install && npm run build
     publishDir: frontend/dist
