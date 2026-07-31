@@ -92,8 +92,8 @@ const updateProfile = async (req, res) => {
       }
     });
     
-    // No enviar la contraseña de vuelta
-    const { password: _, ...userWithoutPassword } = user;
+    const userWithoutPassword = { ...user };
+    delete userWithoutPassword.password;
     res.json(userWithoutPassword);
   } catch (error) {
     res.status(400).json({ error: 'Error al actualizar perfil: ' + error.message });

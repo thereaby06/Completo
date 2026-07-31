@@ -1,4 +1,4 @@
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, _next) => {
   console.error('Error:', err);
 
   if (err.name === 'PrismaClientKnownRequestError') {
@@ -21,7 +21,7 @@ const errorHandler = (err, req, res, next) => {
   });
 };
 
-const notFoundHandler = (req, res, next) => {
+const notFoundHandler = (req, res, _next) => {
   res.status(404).json({ message: 'Ruta no encontrada' });
 };
 
